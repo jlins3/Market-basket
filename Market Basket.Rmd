@@ -1,0 +1,127 @@
+---
+title: "Market Basket Analysis"
+author: "Jared"
+date: "Apr, 2019"
+output: rmarkdown::github_document
+---
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Loading packages for association rules and the groceries dataset
+library(arules)
+library(arulesViz)
+data("Groceries")
+# The Groceries data set contains 1 month (30 days) of real-world point-of-sale transaction data
+# from a typical local grocery outlet. The data set contains 9835 transactions and the items are 
+# aggregated to 169 categories.
+
+
+```
+
+```{r}
+summary(Groceries)
+
+```
+
+
+
+```{r}
+rules <- apriori(Groceries,parameter = list(supp= .001, conf=.3, maxlen=5, target='rules'))
+
+```
+
+
+How many rules have a confidence of 1?
+
+```{r}
+subrules1 <-rules[quality(rules)$confidence == 1]
+subrules1
+```
+
+
+```{r}
+# Alternative approach
+rules2 <- apriori(Groceries,parameter = list(supp= .001, conf=1, maxlen=5, target='rules'))
+```
+
+
+Which pairs have the highest lift?
+
+```{r}
+# Top 10 lift
+
+inspect(head(sort(rules,by='lift'),10))
+
+```
+
+
+Which have the highest count?
+
+```{r}
+#Highest count
+inspect(head(sort(rules,by='count'),10))
+
+
+```
+
+
+Which left hand side has highest lift when right hand side is only bottled beer?
+
+```{r}
+rule_bottledbeer <- apriori(Groceries,parameter=list(support =0.001, confidence =0.3, maxlen=5),
+                       appearance = list(rhs=("bottled beer"), default="lhs"))
+```
+
+```{r}
+inspect(head(sort(rule_bottledbeer,by='lift'),10))
+
+```
+
+
+Which right hand side has highest lift when left hand side is whole milk and any type of bread?
+
+```{r}
+breadItems <- grep("bread", itemLabels(Groceries), value = TRUE)
+breadItems
+
+```
+
+```{r}
+rules_bread_milk <- apriori(Groceries, 
+                   parameter=list(support =0.001, confidence =0.3, maxlen=5), 
+                   appearance = list(lhs=c("whole milk", breadItems), default="rhs"))
+
+```
+
+```{r}
+inspect(head(sort(rules_bread_milk,by='lift'),10))
+
+```
+
+```{r}
+inspect(head(sort(rules_bread_milk,by='count'),10))
+
+
+```
+
+
+
+Now we visualize our results, and we can even make an interactive plot to pick rules graphically and inspect them.
+
+```{r}
+plot(rules)
+
+
+```
+
+
+
+
+
+
+
+
+
+
